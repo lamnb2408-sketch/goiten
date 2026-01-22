@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vườn Ong Bay - Điểm Danh & Trắc Nghiệm</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+    #bg { position: fixed; inset: 0;
+      background: url('https://static.vecteezy.com/system/resources/thumbnails/040/806/603/small_2x/ai-generated-a-beautiful-garden-scene-with-butterflies-and-beautiful-flowers-free-video.jpg') center/cover no-repeat;
+    }
+    #video { position: fixed; top: -9999px; visibility: hidden; }
+    #preview {
+      position: fixed; bottom: 20px; right: 20px;
+      width: 240px; height: 180px;
+      border: 5px solid #0f0; border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,255,0,0.8);
+      overflow: hidden; transform: scaleX(-1);
+      background: #000;
+    }
+    canvas { position: fixed; inset: 0; pointer-events: none; }
+    #hand-canvas { z-index: 10; transform: scaleX(-1); }
+    #bees-canvas { z-index: 20; }
+
+    #manage-btn, #question-btn, #toggle-music-btn {
+      position: fixed; top: 20px;
+      padding: 12px 20px; font-size: 18px; font-weight: bold;
+      background: rgba(0, 200, 0, 0.9); color: white;
+      border: none; border-radius: 15px; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      z-index: 100;
+    }
+    #manage-btn { left: 20px; }
+    #question-btn { right: 20px; }
+    #toggle-music-btn { 
+      left: 50%; transform: translateX(-50%); 
+      padding: 10px 18px; font-size: 16px; 
+      background: rgba(0, 150, 255, 0.9);
+    }
+    #manage-btn:hover, #question-btn:hover { background: #00ff00; }
+    #toggle-music-btn:hover { background: rgba(0, 180, 255, 1); }
+
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      align-items: center; justify-content: center; z-index: 200;
+    }
+    .modal-content {
+      background: white; padding: 30px; border-radius: 20px;
+      width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .close { float: right; font-size: 32px; cursor: pointer; color: #aaa; }
+    .close:hover { color: #000; }
+    h2 { text-align: center; color: #00aa00; margin: 0 0 20px 0; }
+    input[type="text"], input[type="file"], select { width: 100%; padding: 12px; margin: 12px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+    button { padding: 12px 18px; margin: 8px 4px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    .add-btn { background: #00cc00; color: white; }
+    .import-btn { background: #0066cc; color: white; }
+    .sample-btn { background: #ff9900; color: white; }
+    .del-btn { background: #ff4444; color: white; padding: 8px 12px; font-size: 14px; }
+    .clear-all-btn { background: #cc0000; color: white; margin-top: 20px; width: 100%; padding: 14px; font-size: 18px; }
+    .reset-btn { background: #ff8800; color: white; margin-top: 10px; width: 100%; padding: 14px; font-size: 18px; }
+    ul { list-style: none; padding: 0; margin: 20px 0; }
+    li { padding: 15px; background: #f0fff0; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: flex-start; font-size: 16px; word-break: break-word; white-space: normal; }
+
+    /* Nhóm chủ đề câu hỏi */
+    .topic-group { margin-bottom: 30px; }
+    .topic-title { font-size: 22px; font-weight: bold; color: #006600; margin: 20px 0 10px; border-bottom: 2px solid #00aa00; padding-bottom: 8px; }
+
+    /* Câu hỏi lớn - chữ đen */
+    #quiz-question {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 38px;
+      font-weight: bold;
+      color: #000000;
+      text-shadow: 2px 2px 10px rgba(255,255,255,0.9);
+      text-align: center;
+      max-width: 90%;
+      opacity: 0;
+      transition: opacity 0.6s;
+      z-index: 30;
+      pointer-events: none;
+      word-wrap: break-word;
+      line-height: 1.4;
+    }
+    #quiz-question.show { opacity: 1; }
+
+    /* Đáp án - chữ đen */
+    #quiz-options {
+      position: fixed;
+      top: 220px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 25px;
+      max-width: 95%;
+      opacity: 0;
+      transition: opacity 0.6s;
+      z-index: 30;
+      pointer-events: none;
+    }
+    #quiz-options.show { opacity: 1; pointer-events: all; }
+
+    .quiz-option {
+      flex: 1 1 40%;
+      min-width: 280px;
+      max-width: 45%;
+      padding: 30px 20px;
+      font-size: 28px;
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: #000000;
+      text-shadow: none;
+      border: 2px solid rgba(0,0,0,0.2);
+      text-align: center;
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+    .quiz-option:hover { background: rgba(255,255,255,0.7); transform: scale(1.05); }
+    .quiz-option.correct { background: #00cc00; color: white; border-color: #00ff00; }
+    .quiz-option.wrong { background: #ff4444; color: white; border-color: #ff0000; }
+
+    #unlock-screen {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 300; color: white; font-size: 30px; text-align: center;
+      flex-direction: column; cursor: pointer;
+    }
+
+    #force-unlock-btn {
+      display: none;
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      font-size: 20px;
+      background: #ff5722;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      z-index: 310;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+  </style>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+</head>
+<body>
+  <div id="bg"></div>
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="bees-canvas"></canvas>
+  <div id="preview"><canvas id="hand-canvas"></canvas></div>
+
+  <button id="manage-btn">📝 Quản Lý Danh Sách</button>
+  <button id="question-btn">❓ Câu Hỏi</button>
+  <button id="toggle-music-btn">🎵 Nhạc nền: Bật</button>
+
+  <div id="unlock-screen">
+    <div>
+      <h1>🐝 Vườn Ong Bay</h1>
+      <p>Click/chạm màn hình để bật âm thanh và bắt đầu!</p>
+    </div>
+  </div>
+
+  <button id="force-unlock-btn">Bật Âm Thanh Thủ Công (nếu vẫn im lặng)</button>
+
+  <div id="quiz-question"></div>
+  <div id="quiz-options">
+    <div class="quiz-option" data-choice="A">A. Đáp án A</div>
+    <div class="quiz-option" data-choice="B">B. Đáp án B</div>
+    <div class="quiz-option" data-choice="C">C. Đáp án C</div>
+    <div class="quiz-option" data-choice="D">D. Đáp án D</div>
+  </div>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Danh Sách Học Sinh</h2>
+
+      <div style="margin: 15px 0; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <label style="font-weight: bold; font-size: 18px;">Chọn lớp:</label>
+        <select id="class-selector" style="padding: 10px; font-size: 18px; border-radius: 8px; min-width: 180px;"></select>
+        
+        <input type="text" id="new-class-name" placeholder="Tên lớp mới (ví dụ: 4C)" style="padding: 10px; font-size: 16px; flex: 1; min-width: 200px;">
+        <button class="add-btn" id="add-class-btn">➕ Thêm Lớp</button>
+      </div>
+
+      <button class="del-btn" id="delete-class-btn" style="margin: 10px 0; background: #d32f2f;">🗑️ Xóa lớp hiện tại</button>
+
+      <hr style="margin: 20px 0;">
+
+      <input type="text" id="new-name" placeholder="Nhập tên học sinh mới">
+      <button class="add-btn" id="add-btn">➕ Thêm Học Sinh</button>
+      
+      <hr style="margin: 25px 0;">
+      <label><strong>📂 Nhập từ Excel (.xlsx hoặc .xls)</strong></label>
+      <input type="file" id="excel-file" accept=".xlsx,.xls">
+      <button class="import-btn" id="import-btn">⬆️ Nhập Từ Excel</button>
+      <button class="sample-btn" id="sample-btn">📥 Tải File Mẫu</button>
+      
+      <ul id="student-list"></ul>
+      <button class="clear-all-btn" id="clear-all-btn">🗑️ Xóa Toàn Bộ Học Sinh Lớp Này</button>
+      <button class="reset-btn" id="reset-btn">🔄 Khôi Phục Mặc Định (các lớp mẫu)</button>
+    </div>
+  </div>
+
+  <div id="question-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Biên Soạn Câu Hỏi Trắc Nghiệm</h2>
+
+      <input type="text" id="new-topic" placeholder="Nhập chủ đề (ví dụ: Toán, Tiếng Việt, Khoa học)">
+      <input type="text" id="new-question" placeholder="Nhập câu hỏi">
+      <input type="text" id="option-a" placeholder="Đáp án A">
+      <input type="text" id="option-b" placeholder="Đáp án B">
+      <input type="text" id="option-c" placeholder="Đáp án C">
+      <input type="text" id="option-d" placeholder="Đáp án D">
+      <select id="correct-answer">
+        <option value="">Chọn đáp án đúng</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+      <button class="add-btn" id="add-question-btn">➕ Thêm Câu Hỏi</button>
+      
+      <hr style="margin: 25px 0;">
+      <label><strong>📂 Nhập từ file JSON, TXT hoặc Word (.docx)</strong></label>
+      <input type="file" id="questions-file" accept=".json,.txt,.docx">
+      <button class="import-btn" id="import-questions-btn">⬆️ Nhập Từ File</button>
+      <button class="sample-btn" id="sample-questions-btn">📥 Tải File Mẫu JSON</button>
+
+      <!-- Dropdown lọc chủ đề -->
+      <div style="margin: 20px 0;">
+        <label style="font-weight: bold;">Xem theo chủ đề: </label>
+        <select id="topic-filter">
+          <option value="">Tất cả chủ đề</option>
+        </select>
+      </div>
+      
+      <ul id="question-list"></ul>
+      <button class="clear-all-btn" id="clear-questions-btn">🗑️ Xóa Tất Cả Câu Hỏi</button>
+    </div>
+  </div>
+
+  <!-- Âm thanh hiệu ứng - dùng file local -->
+  <audio id="buzz-sound" loop preload="auto">
+    <source src="assets/sounds/bee-buzz.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="select-sound" preload="auto">
+    <source src="assets/sounds/select-bell.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="cheer-sound" preload="auto">
+    <source src="assets/sounds/cheer-applause.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="correct-sound" preload="auto">
+    <source src="assets/sounds/correct-ding.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="wrong-sound" preload="auto">
+    <source src="assets/sounds/wrong-buzzer.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Nhạc nền -->
+  <audio id="background-music" loop preload="auto">
+    <source src="assets/sounds/background-forest-treasure.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { GestureRecognizer, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+    const video = document.getElementById('video');
+    const handCanvas = document.getElementById('hand-canvas');
+    const beesCanvas = document.getElementById('bees-canvas');
+    const handCtx = handCanvas.getContext('2d');
+    const beesCtx = beesCanvas.getContext('2d');
+    const drawingUtils = new DrawingUtils(handCtx);
+
+    const beeImg = new Image();
+    beeImg.src = 'https://static.vecteezy.com/system/resources/previews/021/013/518/non_2x/3d-bee-on-transparent-background-free-png.png';
+
+    const buzzAudio = document.getElementById('buzz-sound');
+    const selectAudio = document.getElementById('select-sound');
+    const cheerAudio = document.getElementById('cheer-sound');
+    const correctAudio = document.getElementById('correct-sound');
+    const wrongAudio = document.getElementById('wrong-sound');
+    const bgMusic = document.getElementById('background-music');
+
+    buzzAudio.volume = 0.8;
+    selectAudio.volume = 1.0;
+    cheerAudio.volume = 1.0;
+    correctAudio.volume = 1.0;
+    wrongAudio.volume = 0.9;
+    bgMusic.volume = 0.4;
+
+    let audioUnlocked = false;
+    let musicEnabled = true;
+
+    const unlockAudio = () => {
+      if (audioUnlocked) return;
+
+      console.log('Bắt đầu unlock âm thanh...');
+
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      const primeSound = (sound) => {
+        if (!sound) return;
+        sound.muted = true;
+        sound.currentTime = 0;
+        const playPromise = sound.play();
+        if (playPromise) {
+          playPromise.then(() => {
+            setTimeout(() => {
+              sound.pause();
+              sound.muted = false;
+              console.log(`${sound.id} primed OK`);
+            }, 100);
+          }).catch(e => console.warn(`${sound.id} prime fail:`, e));
+        }
+      };
+
+      const resumeAndPrimeAll = () => {
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            console.log('AudioContext resumed');
+          }).catch(err => console.error('Resume fail:', err));
+        }
+
+        const sounds = [buzzAudio, selectAudio, cheerAudio, correctAudio, wrongAudio];
+        sounds.forEach(primeSound);
+        setTimeout(() => sounds.forEach(primeSound), 300);
+        setTimeout(() => sounds.forEach(primeSound), 600);
+
+        if (musicEnabled) {
+          const tryPlayBg = () => {
+            bgMusic.play().then(() => {
+              console.log('Nhạc nền đã phát thành công!');
+            }).catch(e => {
+              console.warn('Nhạc nền play fail, thử lại:', e);
+              setTimeout(tryPlayBg, 500);
+            });
+          };
+          tryPlayBg();
+        }
+
+        audioUnlocked = true;
+        document.getElementById('unlock-screen').style.display = 'none';
+        console.log('Audio unlock HOÀN TẤT');
+      };
+
+      resumeAndPrimeAll();
+
+      document.body.addEventListener('click', resumeAndPrimeAll, { once: true });
+
+      setTimeout(() => {
+        if (!audioUnlocked) {
+          document.getElementById('force-unlock-btn').style.display = 'block';
+        }
+      }, 5000);
+    };
+
+    document.getElementById('unlock-screen').onclick = unlockAudio;
+    document.getElementById('force-unlock-btn').onclick = () => {
+      unlockAudio();
+      document.getElementById('force-unlock-btn').style.display = 'none';
+    };
+
+    const toggleMusicBtn = document.getElementById('toggle-music-btn');
+    toggleMusicBtn.addEventListener('click', () => {
+      musicEnabled = !musicEnabled;
+      if (musicEnabled) {
+        if (audioUnlocked) {
+          bgMusic.play().then(() => console.log('Nhạc nền bật lại thành công')).catch(e => console.warn('Bật lại nhạc nền fail:', e));
+        }
+        toggleMusicBtn.textContent = '🎵 Nhạc nền: Bật';
+        toggleMusicBtn.style.background = 'rgba(0, 150, 255, 0.9)';
+      } else {
+        bgMusic.pause();
+        toggleMusicBtn.textContent = '🎵 Nhạc nền: Tắt';
+        toggleMusicBtn.style.background = 'rgba(150, 150, 150, 0.8)';
+      }
+    });
+
+    const defaultStudents = [
+      "Nguyễn Văn An", "Trần Thị Bình", "Lê Văn Cường", "Phạm Thị Dung", "Hoàng Văn Em",
+      "Nguyễn Thị Hoa", "Vũ Văn Giang", "Đỗ Thị Hương", "Bùi Văn Khánh", "Đặng Thị Lan",
+      "Hồ Văn Minh", "Lý Thị Na", "Mai Văn Phong", "Tô Thị Quyên", "Đinh Văn Sơn",
+      "Phan Thị Thảo", "Ngô Văn Út", "Đào Thị Vân", "Bạch Văn Xuân", "Cao Thị Yến"
+    ];
+
+    let classes = JSON.parse(localStorage.getItem('beeClasses')) || {
+      "Mẫu giáo": ["Bé An", "Bé Bình", "Bé Cường"],
+      "Lớp 3A": [...defaultStudents.slice(0,10)],
+      "Lớp 3B": [...defaultStudents.slice(10,20)]
+    };
+
+    let currentClass = localStorage.getItem('beeCurrentClass') || "Lớp 3A";
+
+    function getCurrentStudents() {
+      return classes[currentClass] || [];
+    }
+
+    let questions = JSON.parse(localStorage.getItem('beeQuestions')) || [];
+
+    let quizQueue = [];
+    let currentQuizIndex = 0;
+    let currentQuiz = null;
+    let quizStarted = false;
+
+    function updateClassSelector() {
+      const select = document.getElementById('class-selector');
+      select.innerHTML = '';
+      Object.keys(classes).forEach(className => {
+        const option = document.createElement('option');
+        option.value = className;
+        option.textContent = className;
+        if (className === currentClass) option.selected = true;
+        select.appendChild(option);
+      });
+    }
+
+    function updateStudentList() {
+      const list = document.getElementById('student-list');
+      const currentStudents = getCurrentStudents();
+      
+      list.innerHTML = currentStudents.length === 0 
+        ? '<li style="text-align:center;color:#999;">(Chưa có học sinh nào trong lớp này)</li>' 
+        : '';
+
+      currentStudents.forEach((name, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${name}</span><button class="del-btn" data-index="${i}">🗑️ Xóa</button>`;
+        list.appendChild(li);
+      });
+
+      document.querySelectorAll('#student-list .del-btn').forEach(btn => {
+        btn.onclick = () => {
+          const currentStudents = getCurrentStudents();
+          currentStudents.splice(btn.dataset.index, 1);
+          classes[currentClass] = currentStudents;
+          localStorage.setItem('beeClasses', JSON.stringify(classes));
+          updateStudentList();
+        };
+      });
+    }
+
+    function updateQuestionList(filterTopic = '') {
+      const list = document.getElementById('question-list');
+      list.innerHTML = '';
+
+      const topics = [...new Set(questions.map(q => q.topic || 'Chưa phân loại'))];
+
+      const filterSelect = document.getElementById('topic-filter');
+      filterSelect.innerHTML = '<option value="">Tất cả chủ đề</option>';
+      topics.forEach(topic => {
+        const opt = document.createElement('option');
+        opt.value = topic;
+        opt.textContent = topic;
+        if (topic === filterTopic) opt.selected = true;
+        filterSelect.appendChild(opt);
+      });
+
+      const filtered = filterTopic 
+        ? questions.filter(q => (q.topic || 'Chưa phân loại') === filterTopic)
+        : questions;
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<li style="text-align:center;color:#999;">(Chưa có câu hỏi nào)</li>';
+        return;
+      }
+
+      const grouped = {};
+      filtered.forEach(q => {
+        const t = q.topic || 'Chưa phân loại';
+        if (!grouped[t]) grouped[t] = [];
+        grouped[t].push(q);
+      });
+
+      Object.keys(grouped).forEach(topic => {
+        const group = document.createElement('div');
+        group.className = 'topic-group';
+
+        const title = document.createElement('div');
+        title.className = 'topic-title';
+        title.textContent = topic;
+        group.appendChild(title);
+
+        const ul = document.createElement('ul');
+        grouped[topic].forEach(q => {
+          const index = questions.indexOf(q);
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <div class="question-item">
+              <strong>${q.question}</strong>
+              <div class="options">
+                <span><strong>A:</strong> ${q.a}</span>
+                <span><strong>B:</strong> ${q.b}</span>
+                <span><strong>C:</strong> ${q.c}</span>
+                <span><strong>D:</strong> ${q.d}</span>
+              </div>
+              <small>Đáp án đúng: <span class="correct-answer">${q.correct}</span></small>
+            </div>
+            <button class="del-btn" data-index="${index}">🗑️ Xóa</button>`;
+          ul.appendChild(li);
+        });
+
+        group.appendChild(ul);
+        list.appendChild(group);
+      });
+
+      document.querySelectorAll('#question-list .del-btn').forEach(btn => {
+        btn.onclick = () => {
+          const index = parseInt(btn.dataset.index);
+          questions.splice(index, 1);
+          localStorage.setItem('beeQuestions', JSON.stringify(questions));
+          updateQuestionList(filterTopic);
+        };
+      });
+    }
+
+    const modal = document.getElementById('modal');
+    const questionModal = document.getElementById('question-modal');
+
+    document.getElementById('manage-btn').addEventListener('click', () => {
+      modal.style.display = 'flex';
+      updateClassSelector();
+      updateStudentList();
+    });
+
+    document.getElementById('question-btn').addEventListener('click', () => {
+      questionModal.style.display = 'flex';
+      updateQuestionList();
+    });
+
+    document.querySelector('#modal .close').addEventListener('click', () => modal.style.display = 'none');
+    document.querySelector('#question-modal .close').addEventListener('click', () => questionModal.style.display = 'none');
+
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+      if (e.target === questionModal) questionModal.style.display = 'none';
+    });
+
+    document.getElementById('class-selector').addEventListener('change', (e) => {
+      currentClass = e.target.value;
+      localStorage.setItem('beeCurrentClass', currentClass);
+      updateStudentList();
+    });
+
+    document.getElementById('add-class-btn').addEventListener('click', () => {
+      const newClassName = document.getElementById('new-class-name').value.trim();
+      if (newClassName && !classes[newClassName]) {
+        classes[newClassName] = [];
+        currentClass = newClassName;
+        localStorage.setItem('beeClasses', JSON.stringify(classes));
+        localStorage.setItem('beeCurrentClass', currentClass);
+        updateClassSelector();
+        updateStudentList();
+        document.getElementById('new-class-name').value = '';
+      } else if (classes[newClassName]) {
+        alert('Lớp này đã tồn tại!');
+      }
+    });
+
+    document.getElementById('delete-class-btn').addEventListener('click', () => {
+      if (Object.keys(classes).length <= 1) {
+        return alert('Không thể xóa khi chỉ còn 1 lớp!');
+      }
+      if (confirm(`Bạn có chắc muốn xóa lớp "${currentClass}" và toàn bộ học sinh trong lớp?`)) {
+        delete classes[currentClass];
+        currentClass = Object.keys(classes)[0];
+        localStorage.setItem('beeClasses', JSON.stringify(classes));
+        localStorage.setItem('beeCurrentClass', currentClass);
+        updateClassSelector();
+        updateStudentList();
+      }
+    });
+
+    document.getElementById('add-question-btn').addEventListener('click', () => {
+      const topic = document.getElementById('new-topic').value.trim() || 'Chưa phân loại';
+      const question = document.getElementById('new-question').value.trim();
+      const a = document.getElementById('option-a').value.trim();
+      const b = document.getElementById('option-b').value.trim();
+      const c = document.getElementById('option-c').value.trim();
+      const d = document.getElementById('option-d').value.trim();
+      const correct = document.getElementById('correct-answer').value;
+
+      if (question && a && b && c && d && correct) {
+        questions.push({ topic, question, a, b, c, d, correct });
+        localStorage.setItem('beeQuestions', JSON.stringify(questions));
+        document.getElementById('new-topic').value = '';
+        document.getElementById('new-question').value = '';
+        document.getElementById('option-a').value = '';
+        document.getElementById('option-b').value = '';
+        document.getElementById('option-c').value = '';
+        document.getElementById('option-d').value = '';
+        document.getElementById('correct-answer').value = '';
+        updateQuestionList();
+      } else {
+        alert("Vui lòng điền đầy đủ thông tin câu hỏi!");
+      }
+    });
+
+    document.getElementById('topic-filter').addEventListener('change', (e) => {
+      updateQuestionList(e.target.value);
+    });
+
+    document.getElementById('clear-questions-btn').addEventListener('click', () => {
+      if (confirm('Xóa tất cả câu hỏi?')) {
+        questions = [];
+        localStorage.setItem('beeQuestions', JSON.stringify(questions));
+        updateQuestionList();
+      }
+    });
+
+    document.getElementById('add-btn').addEventListener('click', () => {
+      const name = document.getElementById('new-name').value.trim();
+      const currentStudents = getCurrentStudents();
+      if (name && !currentStudents.includes(name)) {
+        currentStudents.push(name);
+        classes[currentClass] = currentStudents;
+        localStorage.setItem('beeClasses', JSON.stringify(classes));
+        document.getElementById('new-name').value = '';
+        updateStudentList();
+      }
+    });
+    document.getElementById('new-name').addEventListener('keypress', e => {
+      if (e.key === 'Enter') document.getElementById('add-btn').click();
+    });
+
+    document.getElementById('clear-all-btn').addEventListener('click', () => {
+      if (confirm('Xóa toàn bộ học sinh trong lớp hiện tại?')) {
+        classes[currentClass] = [];
+        localStorage.setItem('beeClasses', JSON.stringify(classes));
+        updateStudentList();
+      }
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      if (confirm('Khôi phục danh sách mặc định (các lớp mẫu)?')) {
+        classes = {
+          "Mẫu giáo": ["Bé An", "Bé Bình", "Bé Cường"],
+          "Lớp 3A": [...defaultStudents.slice(0,10)],
+          "Lớp 3B": [...defaultStudents.slice(10,20)]
+        };
+        currentClass = "Lớp 3A";
+        localStorage.setItem('beeClasses', JSON.stringify(classes));
+        localStorage.setItem('beeCurrentClass', currentClass);
+        updateClassSelector();
+        updateStudentList();
+      }
+    });
+
+    document.getElementById('sample-btn').addEventListener('click', () => {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([["Tên học sinh"], ...defaultStudents.slice(0,10).map(n => [n])]);
+      ws['!cols'] = [{ wch: 35 }];
+      XLSX.utils.book_append_sheet(wb, ws, "Danh sách");
+      XLSX.writeFile(wb, "mau_danh_sach_hoc_sinh.xlsx");
+    });
+
+    document.getElementById('import-btn').addEventListener('click', () => {
+      const file = document.getElementById('excel-file').files[0];
+      if (!file) return alert('Vui lòng chọn file Excel!');
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = e.target.result;
+          const wb = XLSX.read(data, { type: 'binary' });
+          const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+          let added = 0;
+          const currentStudents = getCurrentStudents();
+          json.forEach(row => {
+            if (row[0]) {
+              const name = String(row[0]).trim();
+              if (name && !currentStudents.includes(name)) {
+                currentStudents.push(name);
+                added++;
+              }
+            }
+          });
+          classes[currentClass] = currentStudents;
+          localStorage.setItem('beeClasses', JSON.stringify(classes));
+          updateStudentList();
+          alert(`Đã thêm ${added} học sinh mới vào lớp ${currentClass}!`);
+        } catch (err) {
+          alert("Lỗi đọc file: " + err.message);
+        }
+      };
+      reader.readAsBinaryString(file);
+    });
+
+    document.getElementById('import-questions-btn').addEventListener('click', () => {
+      const file = document.getElementById('questions-file').files[0];
+      if (!file) return alert('Vui lòng chọn file!');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        let newQuestions = [];
+
+        if (file.name.endsWith('.json')) {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data)) throw new Error('File JSON phải là mảng!');
+            newQuestions = data.map(q => ({
+              topic: q.topic || 'Chưa phân loại',
+              question: q.question?.trim() || '',
+              a: q.a?.trim() || '',
+              b: q.b?.trim() || '',
+              c: q.c?.trim() || '',
+              d: q.d?.trim() || '',
+              correct: String(q.correct || '').toUpperCase()
+            })).filter(q => q.question && q.a && q.b && q.c && q.d && ['A','B','C','D'].includes(q.correct));
+          } catch (err) {
+            return alert('Lỗi đọc file JSON: ' + err.message);
+          }
+        } else if (file.name.endsWith('.txt')) {
+          const content = e.target.result;
+          const blocks = content.split(/\n\s*\n/).filter(b => b.trim());
+          for (const block of blocks) {
+            const lines = block.split('\n').map(l => l.trim());
+            let q = { topic: 'Chưa phân loại', question: '', a: '', b: '', c: '', d: '', correct: '' };
+            for (const line of lines) {
+              if (line.startsWith('Chủ đề:')) q.topic = line.replace('Chủ đề:', '').trim();
+              if (line.startsWith('Câu hỏi:')) q.question = line.replace('Câu hỏi:', '').trim();
+              else if (line.startsWith('A:')) q.a = line.replace('A:', '').trim();
+              else if (line.startsWith('B:')) q.b = line.replace('B:', '').trim();
+              else if (line.startsWith('C:')) q.c = line.replace('C:', '').trim();
+              else if (line.startsWith('D:')) q.d = line.replace('D:', '').trim();
+              else if (line.match(/Đáp án( đúng)?:/i)) q.correct = line.replace(/Đáp án( đúng)?:/i, '').trim().toUpperCase();
+            }
+            if (q.question && q.a && q.b && q.c && q.d && ['A','B','C','D'].includes(q.correct)) {
+              newQuestions.push(q);
+            }
+          }
+        } else if (file.name.endsWith('.docx')) {
+          mammoth.convertToHtml({arrayBuffer: e.target.result})
+            .then(result => {
+              const text = result.value.replace(/<[^>]*>/g, '\n').replace(/\n\n+/g, '\n\n').trim();
+              const blocks = text.split(/\n\s*\n/).filter(b => b.trim());
+              for (const block of blocks) {
+                const lines = block.split('\n').map(l => l.trim());
+                let q = { topic: 'Chưa phân loại', question: '', a: '', b: '', c: '', d: '', correct: '' };
+                for (const line of lines) {
+                  if (line.startsWith('Chủ đề:')) q.topic = line.replace('Chủ đề:', '').trim();
+                  if (line.startsWith('Câu hỏi:')) q.question = line.replace('Câu hỏi:', '').trim();
+                  else if (line.startsWith('A:')) q.a = line.replace('A:', '').trim();
+                  else if (line.startsWith('B:')) q.b = line.replace('B:', '').trim();
+                  else if (line.startsWith('C:')) q.c = line.replace('C:', '').trim();
+                  else if (line.startsWith('D:')) q.d = line.replace('D:', '').trim();
+                  else if (line.match(/Đáp án( đúng)?:/i)) q.correct = line.replace(/Đáp án( đúng)?:/i, '').trim().toUpperCase();
+                }
+                if (q.question && q.a && q.b && q.c && q.d && ['A','B','C','D'].includes(q.correct)) {
+                  newQuestions.push(q);
+                }
+              }
+              finalizeImport(newQuestions);
+            })
+            .catch(err => alert('Lỗi đọc file Word: ' + err.message));
+          return;
+        } else {
+          return alert('Chỉ hỗ trợ file .json, .txt hoặc .docx!');
+        }
+
+        finalizeImport(newQuestions);
+      };
+
+      if (file.name.endsWith('.docx')) {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
+
+    function finalizeImport(newQuestions) {
+      if (newQuestions.length === 0) return alert('Không tìm thấy câu hỏi hợp lệ nào trong file!');
+
+      let added = 0;
+      newQuestions.forEach(nq => {
+        const exists = questions.some(eq => 
+          eq.question === nq.question && eq.a === nq.a && eq.b === nq.b && eq.c === nq.c && eq.d === nq.d && eq.correct === nq.correct
+        );
+        if (!exists) {
+          questions.push(nq);
+          added++;
+        }
+      });
+
+      localStorage.setItem('beeQuestions', JSON.stringify(questions));
+      updateQuestionList();
+      alert(`Đã thêm ${added} câu hỏi mới (tổng cộng ${questions.length} câu)!`);
+      document.getElementById('questions-file').value = '';
+    }
+
+    document.getElementById('sample-questions-btn').addEventListener('click', () => {
+      const sampleData = [
+        { "topic": "Toán", "question": "1 + 1 = ?", "a": "1", "b": "2", "c": "3", "d": "4", "correct": "B" },
+        { "topic": "Tiếng Việt", "question": "Thủ đô Việt Nam là gì?", "a": "Hà Nội", "b": "TP.HCM", "c": "Đà Nẵng", "d": "Huế", "correct": "A" }
+      ];
+      const blob = new Blob([JSON.stringify(sampleData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mau_cau_hoi_trac_nghiem.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    const quizQuestion = document.getElementById('quiz-question');
+    const quizOptions = document.getElementById('quiz-options');
+    const optionButtons = document.querySelectorAll('.quiz-option');
+
+    let inQuizMode = false;
+    let questionShown = false;
+    let questionShowTime = 0;
+    let selectedStudent = null;
+    let selectTime = 0;
+
+    optionButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const choice = btn.dataset.choice;
+        const isCorrect = currentQuiz && choice === currentQuiz.correct;
+
+        optionButtons.forEach(b => b.style.pointerEvents = 'none');
+
+        if (isCorrect) {
+          btn.classList.add('correct');
+          if (audioUnlocked) correctAudio.play().catch(() => {});
+        } else {
+          btn.classList.add('wrong');
+          if (audioUnlocked) wrongAudio.play().catch(() => {});
+        }
+
+        setTimeout(() => {
+          optionButtons.forEach(b => {
+            b.classList.remove('correct', 'wrong');
+            b.textContent = '';
+            b.style.pointerEvents = 'none';
+          });
+          quizQuestion.classList.remove('show');
+          quizOptions.classList.remove('show');
+
+          if (isCorrect) {
+            currentQuizIndex++;
+          }
+
+          inQuizMode = false;
+          questionShown = false;
+          selectedStudent = null;
+          selectTime = 0;
+
+          if (currentQuizIndex >= quizQueue.length) {
+            quizQuestion.textContent = "Hoàn thành tất cả câu hỏi! 🎉";
+            quizQuestion.classList.add('show');
+            if (audioUnlocked) cheerAudio.play().catch(() => {});
+            setTimeout(() => quizQuestion.classList.remove('show'), 5000);
+            quizStarted = false;
+            quizQueue = [];
+            currentQuizIndex = 0;
+          }
+        }, 3000);
+      });
+    });
+
+    let rolling = false, lastRoll = 0;
+    let handX = innerWidth/2, handY = innerHeight/2, targetHandX = handX, targetHandY = handY;
+    let recognizer = null;
+
+    const resize = () => {
+      beesCanvas.width = innerWidth;
+      beesCanvas.height = innerHeight;
+      handCanvas.width = handCanvas.offsetWidth;
+      handCanvas.height = handCanvas.offsetHeight;
+    };
+    window.onresize = resize;
+
+    async function init() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        video.srcObject = stream;
+        await video.play();
+        resize();
+
+        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+        recognizer = await GestureRecognizer.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/latest/gesture_recognizer.task",
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO",
+          numHands: 2,
+          minHandDetectionConfidence: 0.4,
+          minTrackingConfidence: 0.4
+        });
+
+        requestAnimationFrame(loop);
+      } catch (err) {
+        alert("Lỗi khởi động camera: " + err.message + "\nỨng dụng vẫn chạy nhưng không nhận diện tay.");
+        requestAnimationFrame(loop);
+      }
+    }
+
+    function loop(time) {
+      if (!recognizer) {
+        requestAnimationFrame(loop);
+        return;
+      }
+
+      const results = recognizer.recognizeForVideo(video, time);
+
+      handCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+      handCtx.drawImage(video, 0, 0, handCanvas.width, handCanvas.height);
+
+      if (results.landmarks.length > 0) {
+        unlockAudio();
+
+        const lm = results.landmarks[0];
+        drawingUtils.drawConnectors(lm, GestureRecognizer.HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
+        drawingUtils.drawLandmarks(lm, { color: '#FFFFFF', radius: 8 });
+
+        targetHandX = (1 - lm[9].x) * innerWidth;
+        targetHandY = lm[9].y * innerHeight;
+
+        if (results.gestures.length > 0) {
+          const gesture = results.gestures[0][0].categoryName;
+          if (gesture === "Open_Palm" && !rolling && !inQuizMode) {
+            rolling = true;
+            if (audioUnlocked) {
+              buzzAudio.play().catch(() => {});
+            }
+          }
+          if (gesture === "Pointing_Up" && rolling) {
+            rolling = false;
+            buzzAudio.pause();
+            buzzAudio.currentTime = 0;
+            selectTime = Date.now();
+            questionShown = false;
+            questionShowTime = Date.now() + 3000;
+
+            const currentStudents = getCurrentStudents();
+            if (currentStudents.length > 0) {
+              selectedStudent = currentStudents[Math.floor(Math.random() * currentStudents.length)];
+            }
+
+            if (audioUnlocked) {
+              selectAudio.play().catch(() => {});
+            }
+
+            if (questions.length > 0) {
+              if (!quizStarted) {
+                quizQueue = [...questions].sort(() => Math.random() - 0.5);
+                currentQuizIndex = 0;
+                quizStarted = true;
+              }
+
+              if (currentQuizIndex < quizQueue.length) {
+                currentQuiz = quizQueue[currentQuizIndex];
+
+                optionButtons.forEach(b => {
+                  b.textContent = '';
+                  b.classList.remove('correct', 'wrong');
+                  b.style.pointerEvents = 'none';
+                });
+
+                inQuizMode = true;
+              }
+            }
+          }
+        }
+      }
+
+      if (inQuizMode && !questionShown && Date.now() > questionShowTime) {
+        quizQuestion.textContent = `Câu ${currentQuizIndex + 1}/${quizQueue.length}: ${currentQuiz.question}`;
+        quizQuestion.classList.add('show');
+
+        optionButtons[0].textContent = `A. ${currentQuiz.a}`;
+        optionButtons[1].textContent = `B. ${currentQuiz.b}`;
+        optionButtons[2].textContent = `C. ${currentQuiz.c}`;
+        optionButtons[3].textContent = `D. ${currentQuiz.d}`;
+        optionButtons.forEach(b => b.style.pointerEvents = 'all');
+        quizOptions.classList.add('show');
+        questionShown = true;
+      }
+
+      handX += (targetHandX - handX) * 0.3;
+      handY += (targetHandY - handY) * 0.3;
+
+      if (rolling && getCurrentStudents().length > 0 && time - lastRoll > 200) {
+        const currentStudents = getCurrentStudents();
+        selectedStudent = currentStudents[Math.floor(Math.random() * currentStudents.length)];
+        lastRoll = time;
+      }
+
+      beesCtx.clearRect(0, 0, innerWidth, innerHeight);
+
+      const isShowing = selectTime && Date.now() - selectTime < 9000;
+      if ((rolling || isShowing || inQuizMode) && getCurrentStudents().length > 0) {
+        const currentStudents = getCurrentStudents();
+        currentStudents.forEach((name, i) => {
+          let x, y, scale = 1, rot = 0, flap = 1, alpha = 1;
+          if (name === selectedStudent && (isShowing || inQuizMode)) {
+            const progress = Math.min((Date.now() - selectTime) / 600, 1);
+            scale = 0.5 + progress * 2;
+            rot = progress * 720;
+            x = innerWidth / 2;
+            y = innerHeight / 2;
+          } else if (rolling) {
+            const angle = (i / currentStudents.length) * Math.PI * 2 + time * 0.004;
+            const radius = 180 + Math.sin(time * 0.004 + i) * 120;
+            const wave = Math.sin(time * 0.008 + i * 1.2) * 60;
+            const swirl = Math.sin(time * 0.001) * 50;
+            x = handX + Math.cos(angle) * radius + swirl;
+            y = handY + Math.sin(angle) * radius + wave;
+            rot = Math.atan2(Math.sin(angle), Math.cos(angle) * 1.5) * 180 / Math.PI + Math.sin(time * 0.01 + i) * 40;
+            flap = 1 + Math.abs(Math.sin(time * 0.04 + i)) * 0.2;
+            alpha = 0.9 + Math.sin(time * 0.03 + i) * 0.1;
+          } else return;
+
+          beesCtx.save();
+          beesCtx.globalAlpha = alpha;
+          beesCtx.translate(x, y);
+          beesCtx.rotate(rot * Math.PI / 180);
+          beesCtx.scale(scale * flap, scale);
+          beesCtx.drawImage(beeImg, -60, -60, 120, 120);
+
+          beesCtx.font = 'bold 34px Arial';
+          beesCtx.strokeStyle = '#000';
+          beesCtx.lineWidth = 10;
+          beesCtx.fillStyle = '#FFFF00';
+          beesCtx.textAlign = 'center';
+          beesCtx.textBaseline = 'middle';
+
+          if (name === selectedStudent && (isShowing || inQuizMode)) {
+            const bounce = 1 + Math.sin((Date.now() - selectTime) * 0.02) * 0.1;
+            beesCtx.scale(bounce, bounce);
+            beesCtx.shadowBlur = 40 + Math.sin(time * 0.01) * 20;
+            beesCtx.shadowColor = '#FFFF00';
+          }
+
+          beesCtx.strokeText(name, 0, 80);
+          beesCtx.fillText(name, 0, 80);
+          beesCtx.shadowBlur = 0;
+          beesCtx.restore();
+        });
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    beeImg.onload = () => init();
+  </script>
+</body>
+</html>

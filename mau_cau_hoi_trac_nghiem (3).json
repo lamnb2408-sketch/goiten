@@ -1,0 +1,92 @@
+[
+  {
+    "topic": "Thực vật",
+    "question": "Bộ phận nào của cây chủ yếu thực hiện quá trình quang hợp?",
+    "a": "Rễ",
+    "b": "Thân",
+    "c": "Lá",
+    "d": "Hoa",
+    "correct": "C"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Rễ cây chủ yếu có chức năng gì?",
+    "a": "Hấp thụ ánh sáng",
+    "b": "Hấp thụ nước và chất dinh dưỡng từ đất",
+    "c": "Tạo hạt giống",
+    "d": "Thực hiện hô hấp",
+    "correct": "B"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Khí CO₂ đi vào lá cây qua bộ phận nào?",
+    "a": "Mạch gỗ",
+    "b": "Lỗ khí",
+    "c": "Bộ rễ",
+    "d": "Cánh hoa",
+    "correct": "B"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Thực vật nào sau đây được gọi là thực vật có hoa?",
+    "a": "Rêu",
+    "b": "Dương xỉ",
+    "c": "Cây lúa",
+    "d": "Tảo",
+    "correct": "C"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Quá trình cây lấy năng lượng từ ánh sáng Mặt Trời để tạo chất hữu cơ gọi là gì?",
+    "a": "Hô hấp",
+    "b": "Quang hợp",
+    "c": "Tiêu hóa",
+    "d": "Bài tiết",
+    "correct": "B"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Bộ phận nào của hoa phát triển thành quả sau khi thụ phấn?",
+    "a": "Đài hoa",
+    "b": "Tràng hoa",
+    "c": "Nhụy",
+    "d": "Bầu noãn",
+    "correct": "D"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Cây nào sau đây là cây thân gỗ?",
+    "a": "Cây lúa",
+    "b": "Cây cà chua",
+    "c": "Cây xoài",
+    "d": "Cây cải",
+    "correct": "C"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Chất diệp lục (chlorophyll) có vai trò chính gì trong lá cây?",
+    "a": "Hấp thụ nước",
+    "b": "Hấp thụ ánh sáng để quang hợp",
+    "c": "Vận chuyển chất dinh dưỡng",
+    "d": "Bảo vệ lá khỏi sâu bệnh",
+    "correct": "B"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Loại thực vật nào không có mạch dẫn (không có xylem và phloem)?",
+    "a": "Cây thông",
+    "b": "Cây bạch đàn",
+    "c": "Rêu",
+    "d": "Cây bông",
+    "correct": "C"
+  },
+  {
+    "topic": "Thực vật",
+    "question": "Hạt của thực vật hạt kín được bảo vệ bởi bộ phận nào?",
+    "a": "Nón",
+    "b": "Quả",
+    "c": "Lá noãn",
+    "d": "Bao tử",
+    "correct": "B"
+  }
+]
